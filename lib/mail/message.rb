@@ -2020,7 +2020,7 @@ module Mail
       raw_string = raw_source.to_s
       if match_data = raw_source.to_s.match(/\AFrom\s(#{TEXT}+)#{CRLF}/m)
         set_envelope(match_data[1])
-        self.raw_source = raw_string.sub(match_data[0], "") 
+        self.raw_source = raw_string.sub(match_data[0], "")
       end
     end
 
@@ -2133,6 +2133,17 @@ module Mail
       end
       filename = Mail::Encodings.decode_encode(filename, :decode) if filename rescue filename
       filename
+
+      return filename if filename.present?
+
+      content_main_type = header[:content_type].main_type rescue nil
+
+      if header[:content_disposition].to_s.split(';').include?('attachment')
+        "attachment-#{rand(0..99999)}"
+      elsif content_type && content_main_type == 'image'
+        extension = header[:content_type].sub_type rescue nil
+        "image-#{rand(0..99999)}.#{extension}"
+      end
     end
 
     def do_delivery
