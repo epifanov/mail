@@ -2139,7 +2139,17 @@ module Mail
         filename = nil
       end
       filename = Mail::Encodings.decode_encode(filename, :decode) if filename rescue filename
-      filename
+
+      return filename if filename.present?
+
+      content_main_type = header[:content_type].main_type rescue nil
+
+      if header[:content_disposition].to_s.split(';').include?('attachment')
+        "attachment-#{rand(0..99999)}"
+      elsif content_type && content_main_type == 'image'
+        extension = header[:content_type].sub_type rescue nil
+        "image-#{rand(0..99999)}.#{extension}"
+      end
     end
 
     def do_delivery
